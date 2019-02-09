@@ -1,11 +1,16 @@
 {
-    "manifest_version": 2,
-    "name": "Add Last Active Class To Tab",
-    "version": "1.0",
+  "manifest_version": 2,
+  "name": "Add Last Active Class To Tab",
+  "version": "1.0",
 
-    "description": "Add a last-active class to a TST tab",
+  "description": "Add a last-active class to a TST tab",
 
-    "background" : {
-        "scripts": ["background.js"]
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "applications": {
+    "gecko": {
+      "id": "davidsierra@outlook.com"
     }
+  }
 }
