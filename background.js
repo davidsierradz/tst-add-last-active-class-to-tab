@@ -1,6 +1,7 @@
 'use strict';
 
 const kTST_ID = 'treestyletab@piro.sakura.ne.jp';
+let prevprevid = "";
 
 async function registerToTST() {
   try {
@@ -29,43 +30,39 @@ browser.runtime.onMessageExternal.addListener((aMessage, aSender) => {
   }
 });
 
-registerToTST().then(res => {
-  browser.tabs.onActivated.addListener(callback);
-  browser.tabs.onCreated.addListener(callback);
-  browser.tabs.onRemoved.addListener(callback);
-});
-
-async function getSortedWinTabs() {
-  const tabs = await browser.tabs.query({ currentWindow: true });
-  tabs.sort((a, b) => (a.lastAccessed < b.lastAccessed ? 1 : -1));
-  return tabs;
-}
-
 async function wait(ms) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
 }
 
-async function callback() {
-  await wait(300);
+registerToTST().then(res => {
+  browser.tabs.onActivated.addListener(callback);
+  browser.tabs.onCreated.addListener(callback);
+  browser.tabs.onRemoved.addListener(callback);
+});
 
-  const sortedTabs = await getSortedWinTabs();
+async function callback(activeInfo) {
+		//await wait(50);
+		if (activeInfo.tabId == undefined)
+				return
 
-  const allTabsIDs = sortedTabs.reduce((allIDs, currentTab) => {
-    allIDs.push(currentTab.id);
-    return allIDs;
-  }, []);
+		let a = await browser.tabs.get(activeInfo.tabId);
 
-  browser.runtime.sendMessage(kTST_ID, {
-    type: 'remove-tab-state',
-    tabs: allTabsIDs,
-    state: 'last-active',
-  });
+		if (prevprevid != "")	{
+				let prevprevid_tab = await browser.tabs.get(prevprevid);
+				browser.runtime.sendMessage(kTST_ID, {
+						type: 'remove-tab-state',
+						tabs: [prevprevid_tab],
+						state: 'last-active',
+				});
+		}
 
-  browser.runtime.sendMessage(kTST_ID, {
-    type: 'add-tab-state',
-    tabs: [sortedTabs[1].id],
-    state: 'last-active',
-  });
+		prevprevid = activeInfo.previousTabId;
+
+		browser.runtime.sendMessage(kTST_ID, {
+				type: 'add-tab-state',
+				tabs: [activeInfo.previousTabId],
+				state: 'last-active',
+		});
 }
